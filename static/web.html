@@ -52,10 +52,10 @@
 
 	<!-- PDF 預覽區 -->
 	<div id="preview" class="hidden p-0 sm:p-6 mt-6 sm:mt-8">
-		<iframe id="pdfViewer" class="w-full h-[90vh] sm:min-h-[100vh] rounded-none sm:rounded-lg border-0 sm:border-2 border-gray-300"></iframe>
-		<div class="mt-4 flex justify-center">
+		<div id="downloadBtnDiv" class="mt-4 flex justify-center">
 			<button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 text-base sm:text-lg hover:bg-green-600 transition">下載</button>
 		</div>
+		<iframe id="pdfViewer" class="w-full h-[90vh] sm:min-h-[100vh] rounded-none sm:rounded-lg border-0 sm:border-2 border-gray-300"></iframe>
 	</div>
 
 	<script>
@@ -106,7 +106,7 @@
 							</div>
 						`;
 						congrats.className = 'flex justify-center mt-4';
-						preview.insertBefore(congrats, pdfViewer);
+						preview.insertBefore(congrats, downloadBtnDiv);
 					}
 
 					downloadBtn.onclick = () => {
