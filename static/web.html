@@ -2,66 +2,63 @@
 <html lang="zh-Hant">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>『生命藍圖』</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
 	<!-- 生命數字區 -->
-	<div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg mx-auto mt-8 space-y-6 text-center">
-		<h2 class="text-2xl font-bold text-gray-800">『生命密碼』</h2>
+	<div class="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full max-w-lg mx-auto mt-6 sm:mt-8 space-y-6 text-center">
+		<h2 class="text-xl sm:text-2xl font-bold text-gray-800">『生命密碼』</h2>
 		
-		<form id="numForm" class="space-y-4 mt-6">
+		<form id="numForm" class="space-y-4 mt-4">
 			<div>
-				<input type="text" name="life_number" placeholder="e.g, 123456" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+				<input type="text" name="life_number" placeholder="e.g, 123456" required class="w-full border rounded-lg p-3 text-base sm:text-lg focus:ring focus:ring-blue-300">
 			</div>
-			<button id="generateNumBtn" type="submit" class="w-full bg-purple-500 text-white rounded-lg p-2 hover:bg-purple-600 transition">計算</button>
-			<!-- 錯誤訊息顯示區域 -->
-			<p id="numErrorMsg" class="text-red-500 text-center mt-2 hidden"></p>
+			<button id="generateNumBtn" type="submit" class="w-full bg-purple-500 text-white rounded-lg p-3 text-base sm:text-lg hover:bg-purple-600 transition">萬物皆可算</button>
+			<p id="numErrorMsg" class="text-red-500 text-center mt-2 hidden text-sm sm:text-base"></p>
 		</form>
 
-		<!-- 生命密碼顯示區 -->
 		<div id="lifePasswordOutput" class="hidden mt-4 text-center">
-			<p id="lifePassword" class="text-xl text-purple-500"></p>
+			<p id="lifePassword" class="text-lg sm:text-xl text-purple-500"></p>
 		</div>
 	</div>
 
 	<!-- PDF 產生區 -->
-	<div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg mx-auto mt-8 space-y-6">
-		<h2 class="text-2xl font-bold text-gray-800 text-center">『生命藍圖』</h2>
+	<div class="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full max-w-lg mx-auto mt-6 sm:mt-8 space-y-6">
+		<h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center">『生命藍圖』</h2>
 		
-		<form id="pdfForm" class="space-y-4 mt-6">
+		<form id="pdfForm" class="space-y-4 mt-4">
 			<div>
-				<label class="block text-gray-700 mb-1 font-bold">英文名（護照）</label>
-				<input type="text" name="passport_name" placeholder="e.g, WANG,HSIAO-MING 大小寫、符號不影響" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+				<label class="block text-gray-700 mb-1 font-bold text-base sm:text-lg">英文名（護照）</label>
+				<input type="text" name="passport_name" placeholder="e.g, WANG,HSIAO-MING" required class="w-full border rounded-lg p-3 text-base sm:text-lg focus:ring focus:ring-blue-300">
 			</div>
 
 			<div>
-				<label class="block text-gray-700 mb-1 font-bold">英文名（小名）</label>
-				<input type="text" name="nickname" placeholder="e.g, Apple" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+				<label class="block text-gray-700 mb-1 font-bold text-base sm:text-lg">英文名（小名）</label>
+				<input type="text" name="nickname" placeholder="e.g, Apple" required class="w-full border rounded-lg p-3 text-base sm:text-lg focus:ring focus:ring-blue-300">
 			</div>
 
 			<div>
-				<label class="block text-gray-700 mb-1 font-bold">出生時間（YYYYMMDD hhmm）</label>
-				<input type="text" name="birthday_time" placeholder="e.g, 2025-04-26 01:16 -> 20250426 0116" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+				<label class="block text-gray-700 mb-1 font-bold text-base sm:text-lg">出生時間（YYYYMMDD hhmm）</label>
+				<input type="text" name="birthday_time" placeholder="e.g, 20250426 0116" required class="w-full border rounded-lg p-3 text-base sm:text-lg focus:ring focus:ring-blue-300">
 			</div>
 
-			<button id="generatePdfBtn" type="submit" class="w-full bg-blue-500 text-white rounded-lg p-2 hover:bg-blue-600 transition">產生 PDF</button>
-			<!-- 錯誤訊息顯示區域 -->
-			<p id="pdfErrorMsg" class="text-red-500 text-center mt-2 hidden"></p>
+			<button id="generatePdfBtn" type="submit" class="w-full bg-blue-500 text-white rounded-lg p-3 text-base sm:text-lg hover:bg-blue-600 transition">產生 PDF</button>
+			<p id="pdfErrorMsg" class="text-red-500 text-center mt-2 hidden text-sm sm:text-base"></p>
 		</form>
 	</div>
 
 	<!-- PDF 預覽區 -->
-	<div id="preview" class="hidden p-6">
-		<iframe id="pdfViewer" class="w-full min-h-[100vh] rounded-lg border-2 border-gray-300"></iframe>
+	<div id="preview" class="hidden p-0 sm:p-6 mt-6 sm:mt-8">
+		<iframe id="pdfViewer" class="w-full h-[90vh] sm:min-h-[100vh] rounded-none sm:rounded-lg border-0 sm:border-2 border-gray-300"></iframe>
 		<div class="mt-4 flex justify-center">
-		  <button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 hover:bg-green-600 transition">下載</button>
+			<button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 text-base sm:text-lg hover:bg-green-600 transition">下載</button>
 		</div>
-	  </div>
+	</div>
 
 	<script>
-		// 產生 PDF 表單提交
 		document.getElementById('pdfForm').addEventListener('submit', async (e) => {
 			e.preventDefault();
 
@@ -76,15 +73,11 @@
 			const pdfViewer = document.getElementById('pdfViewer');
 			const downloadBtn = document.getElementById('downloadBtn');
 
-			// 先清掉舊的 PDF 預覽跟 congrat message
 			preview.classList.add('hidden');
 			pdfViewer.src = '';
 
-			// **這邊加上：清除舊的 congrats 訊息**
 			const oldCongrats = document.getElementById('congratsMessage');
-			if (oldCongrats) {
-				oldCongrats.remove();
-			}
+			if (oldCongrats) oldCongrats.remove();
 
 			errorMsg.classList.add('hidden');
 			errorMsg.textContent = '';
@@ -99,17 +92,15 @@
 					const blob = await response.blob();
 					const url = window.URL.createObjectURL(blob);
 
-					// 顯示 PDF 預覽
 					preview.classList.remove('hidden');
 					pdfViewer.src = url + '#view=FitH&navpanes=0&toolbar=0';
 
-					// 額外檢查是否是閏月寶寶
 					const isLeapBaby = response.headers.get('X-IsLeap') === 'true';
 					if (isLeapBaby) {
 						const congrats = document.createElement('div');
-						congrats.id = 'congratsMessage';  // 加一個 id，之後好清除
+						congrats.id = 'congratsMessage';
 						congrats.innerHTML = `
-							<div class="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 text-white text-lg font-bold rounded-xl p-4 shadow-lg animate-bounce">
+							<div class="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 text-white text-lg font-bold rounded-xl p-4 shadow-lg animate-bounce text-center">
 								🎉 恭喜你是潤月寶寶 🎉 <br>
 								🎉 一位趕進度的靈魂 🎉
 							</div>
@@ -118,7 +109,6 @@
 						preview.insertBefore(congrats, pdfViewer);
 					}
 
-					// 下載按鈕設定
 					downloadBtn.onclick = () => {
 						const a = document.createElement('a');
 						a.href = url;
@@ -127,7 +117,6 @@
 						a.click();
 						a.remove();
 					};
-
 				} else if (response.status === 400) {
 					errorMsg.textContent = '出生時間錯誤，請檢查輸入資料！';
 					errorMsg.classList.remove('hidden');
@@ -143,7 +132,7 @@
 				errorMsg.classList.remove('hidden');
 			}
 		});
-		// 生命數字表單提交
+
 		document.getElementById('numForm').addEventListener('submit', async (e) => {
 			e.preventDefault();
 
@@ -154,7 +143,6 @@
 			const lifePasswordOutput = document.getElementById('lifePasswordOutput');
 			const lifePassword = document.getElementById('lifePassword');
 
-			// 清空錯誤訊息與前一次結果
 			errorMsg.classList.add('hidden');
 			errorMsg.textContent = '';
 			lifePasswordOutput.classList.add('hidden');
@@ -166,25 +154,26 @@
 					body: formData
 				});
 
-                if (response.ok) {
-                    const data = await response.json();
-                    lifePasswordOutput.classList.remove('hidden');
-                    lifePassword.textContent = data.lifePassword || '無法計算生命密碼';
-                } else if (response.status === 400) {
-                    errorMsg.textContent = '生命數字格式錯誤，請檢查輸入資料！';
-                    errorMsg.classList.remove('hidden');
-                } else if (response.status === 500) {
-                    errorMsg.textContent = '系統錯誤，請稍後再試。';
-                    errorMsg.classList.remove('hidden');
-                } else {
-                    errorMsg.textContent = '發生未知錯誤。';
-                    errorMsg.classList.remove('hidden');
-                }
-            } catch (err) {
-                errorMsg.textContent = '無法連線到伺服器，請檢查網路或稍後再試。';
-                errorMsg.classList.remove('hidden');
-            }
+				if (response.ok) {
+					const data = await response.json();
+					lifePasswordOutput.classList.remove('hidden');
+					lifePassword.textContent = data.lifePassword || '無法計算生命密碼';
+				} else if (response.status === 400) {
+					errorMsg.textContent = '生命數字格式錯誤，請檢查輸入資料！';
+					errorMsg.classList.remove('hidden');
+				} else if (response.status === 500) {
+					errorMsg.textContent = '系統錯誤，請稍後再試。';
+					errorMsg.classList.remove('hidden');
+				} else {
+					errorMsg.textContent = '發生未知錯誤。';
+					errorMsg.classList.remove('hidden');
+				}
+			} catch (err) {
+				errorMsg.textContent = '無法連線到伺服器，請檢查網路或稍後再試。';
+				errorMsg.classList.remove('hidden');
+			}
 		});
 	</script>
+
 </body>
 </html>
