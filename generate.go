@@ -2,14 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Lofanmi/chinese-calendar-golang/calendar"
-	"github.com/shopspring/decimal"
 	"github.com/signintech/gopdf"
 )
 
@@ -69,11 +71,7 @@ func generate(name string, nickName string, birthday string) ([]byte, int) {
 	lunarT := getLunarTime(solarT)
 	lunar := newTimeData(lunarT)
 
-	pdf, err := NewPdf()
-	if err != nil {
-		slog.Warn("Error creating PDF:", "err", err)
-		return nil, http.StatusInternalServerError
-	}
+	pdf := NewPdf()
 
 	drawDegreeTables(pdf, solar, lunar)
 
@@ -116,7 +114,30 @@ func generate(name string, nickName string, birthday string) ([]byte, int) {
 	// }
 }
 
-func NewPdf() (*gopdf.GoPdf, error) {
+var numRegex = regexp.MustCompile(`^\d+$`)
+
+func generateNum(number string) ([]byte, int) {
+	if !numRegex.MatchString(number) {
+		slog.Warn("Invalid number:", "number", number)
+		return nil, http.StatusBadRequest
+	}
+
+	sumNum, _ := sumDigitsByStr(number)
+	result := sumDigitsToString(sumNum)
+	type Result struct {
+		LifePassword string `json:"lifePassword"`
+	}
+	buf, err := json.Marshal(&Result{
+		LifePassword: result,
+	})
+	if err != nil {
+		slog.Warn("Error marshalling result:", "err", err)
+		return nil, http.StatusInternalServerError
+	}
+	return buf, http.StatusOK
+}
+
+func NewPdf() *gopdf.GoPdf {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	pdf.AddPage()
@@ -124,9 +145,8 @@ func NewPdf() (*gopdf.GoPdf, error) {
 	err := pdf.AddTTFFont(font, "/Library/Fonts/Arial Unicode.ttf")
 	if err != nil {
 		slog.Warn("Error adding font:", "err", err)
-		return nil, err
 	}
-	return pdf, nil
+	return pdf
 }
 
 func drawDegreeTables(pdf *gopdf.GoPdf, solar *TimeData, lunar *TimeData) {
@@ -220,8 +240,7 @@ func drawYearlyTables(pdf *gopdf.GoPdf, solarYear int,
 	}
 }
 
-func drawMainRow(pdf *gopdf.GoPdf, startX float64, startY float64, fontSize float64,
-	textC gopdf.RGBColor, values []string) error {
+func drawMainRow(pdf *gopdf.GoPdf, startX float64, startY float64, fontSize float64, textC gopdf.RGBColor, values []string) error {
 	table := pdf.NewTableLayout(startX, startY, 12, 0)
 
 	for i, v := range values {
@@ -410,15 +429,17 @@ func sumDigitsToString(v int) string {
 	return intSliceToString(ds)
 }
 
-func sumDigits(v int) (int, []int) {
-	numDigits := decimal.NewFromInt(int64(v)).NumDigits()
+func sumDigits(number int) (int, []int) {
+	return sumDigitsByStr(fmt.Sprint(number))
+}
+
+func sumDigitsByStr(numberStr string) (int, []int) {
 	sum := 0
 	digits := []int{}
-	for i := 0; i < numDigits; i++ {
-		num := v % 10
-		v /= 10
-		sum += num
+	for _, n := range numberStr {
+		num, _ := strconv.Atoi(string(n))
 		digits = append(digits, num)
+		sum += num
 	}
 	return sum, digits
 }

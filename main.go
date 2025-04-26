@@ -11,11 +11,12 @@ func main() {
 		http.ServeFile(w, r, "./static/web.html")
 	})
 
-	http.HandleFunc("/generate-pdf", handler)
+	http.HandleFunc("/generate-pdf", handleGeneratePdf)
+	http.HandleFunc("/generate-num", handleGenerateNum)
 	http.ListenAndServe(":5566", nil)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func handleGeneratePdf(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
@@ -34,4 +35,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"report.pdf\"")
 	w.Write(pdfData)
+}
+
+func handleGenerateNum(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	num := r.FormValue("life_number")
+	data, errCode := generateNum(num)
+	if errCode != http.StatusOK {
+		http.Error(w, "Failed to generate number", errCode)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
