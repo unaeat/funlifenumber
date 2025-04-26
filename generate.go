@@ -149,7 +149,7 @@ func generateNum(number string) ([]byte, int) {
 func NewPdf() *gopdf.GoPdf {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
-	err := pdf.AddTTFFont(font, "/Library/Fonts/Arial Unicode.ttf")
+	err := pdf.AddTTFFont(font, "./static/Arial Unicode.ttf")
 	if err != nil {
 		slog.Warn("Error adding font:", "err", err)
 	}

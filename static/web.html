@@ -53,12 +53,12 @@
 	</div>
 
 	<!-- PDF 預覽區 -->
-	<div id="preview" class="flex-1 hidden flex flex-col p-6">
-		<iframe id="pdfViewer" class="w-full h-full flex-1 rounded-lg border-2 border-gray-300"></iframe>
+	<div id="preview" class="hidden p-6">
+		<iframe id="pdfViewer" class="w-full min-h-[100vh] rounded-lg border-2 border-gray-300"></iframe>
 		<div class="mt-4 flex justify-center">
-			<button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 hover:bg-green-600 transition">下載</button>
+		  <button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 hover:bg-green-600 transition">下載</button>
 		</div>
-	</div>
+	  </div>
 
 	<script>
 		// 產生 PDF 表單提交
@@ -76,9 +76,15 @@
 			const pdfViewer = document.getElementById('pdfViewer');
 			const downloadBtn = document.getElementById('downloadBtn');
 
-			// 提交前先清空前一次的 PDF
+			// 先清掉舊的 PDF 預覽跟 congrat message
 			preview.classList.add('hidden');
 			pdfViewer.src = '';
+
+			// **這邊加上：清除舊的 congrats 訊息**
+			const oldCongrats = document.getElementById('congratsMessage');
+			if (oldCongrats) {
+				oldCongrats.remove();
+			}
 
 			errorMsg.classList.add('hidden');
 			errorMsg.textContent = '';
@@ -89,52 +95,54 @@
 					body: formData
 				});
 
-                if (response.ok) {
+				if (response.ok) {
+					const blob = await response.blob();
+					const url = window.URL.createObjectURL(blob);
+
+					// 顯示 PDF 預覽
+					preview.classList.remove('hidden');
+					pdfViewer.src = url + '#view=FitH&navpanes=0&toolbar=0';
+
+					// 額外檢查是否是閏月寶寶
 					const isLeapBaby = response.headers.get('X-IsLeap') === 'true';
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-
-                    // 顯示 PDF 預覽
-                    preview.classList.remove('hidden');
-                    pdfViewer.src = url + '#view=FitH&navpanes=0&toolbar=0';
-
 					if (isLeapBaby) {
 						const congrats = document.createElement('div');
+						congrats.id = 'congratsMessage';  // 加一個 id，之後好清除
 						congrats.innerHTML = `
 							<div class="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 text-white text-lg font-bold rounded-xl p-4 shadow-lg animate-bounce">
-								🎉 恭喜你是潤月寶寶！一位趕進度的靈魂 🎉
+								🎉 恭喜你是潤月寶寶 🎉 <br>
+								🎉 一位趕進度的靈魂 🎉
 							</div>
 						`;
 						congrats.className = 'flex justify-center mt-4';
 						preview.insertBefore(congrats, pdfViewer);
 					}
 
-                    // 下載按鈕設定
-                    downloadBtn.onclick = () => {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${birthdayTime}.pdf`;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                    };
+					// 下載按鈕設定
+					downloadBtn.onclick = () => {
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = `${birthdayTime}.pdf`;
+						document.body.appendChild(a);
+						a.click();
+						a.remove();
+					};
 
-                } else if (response.status === 400) {
-                    errorMsg.textContent = '出生時間錯誤，請檢查輸入資料！';
-                    errorMsg.classList.remove('hidden');
-                } else if (response.status === 500) {
-                    errorMsg.textContent = '系統錯誤，請稍後再試。';
-                    errorMsg.classList.remove('hidden');
-                } else {
-                    errorMsg.textContent = '發生未知錯誤。';
-                    errorMsg.classList.remove('hidden');
-                }
-            } catch (err) {
-                errorMsg.textContent = '無法連線到伺服器，請檢查網路或稍後再試。';
-                errorMsg.classList.remove('hidden');
-            }
+				} else if (response.status === 400) {
+					errorMsg.textContent = '出生時間錯誤，請檢查輸入資料！';
+					errorMsg.classList.remove('hidden');
+				} else if (response.status === 500) {
+					errorMsg.textContent = '系統錯誤，請稍後再試。';
+					errorMsg.classList.remove('hidden');
+				} else {
+					errorMsg.textContent = '發生未知錯誤。';
+					errorMsg.classList.remove('hidden');
+				}
+			} catch (err) {
+				errorMsg.textContent = '無法連線到伺服器，請檢查網路或稍後再試。';
+				errorMsg.classList.remove('hidden');
+			}
 		});
-
 		// 生命數字表單提交
 		document.getElementById('numForm').addEventListener('submit', async (e) => {
 			e.preventDefault();
