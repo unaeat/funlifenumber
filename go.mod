@@ -1,6 +1,6 @@
 module github.com/unaeat/funlifenumber
 
-go 1.24.1
+go 1.24.0
 
 require (
 	github.com/Lofanmi/chinese-calendar-golang v0.0.0-20211214151323-ef5cb443e55e
