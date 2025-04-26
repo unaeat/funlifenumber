@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+	<meta charset="UTF-8">
+	<title>『生命藍圖』</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+	<!-- 表單區 -->
+	<div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg mx-auto mt-8 space-y-6">
+		<h1 class="text-2xl font-bold text-center text-gray-800">『生命藍圖』</h1>
+
+		<form id="pdfForm" class="space-y-4">
+			<div>
+				<label class="block text-gray-700 mb-1">英文護照名</label>
+				<input type="text" name="passport_name" placeholder="e.g, WANG,HSIAO-MING" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+			</div>
+
+			<div>
+				<label class="block text-gray-700 mb-1">小名</label>
+				<input type="text" name="nickname" placeholder="e.g, Apple" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+			</div>
+
+			<div>
+				<label class="block text-gray-700 mb-1">出生時間 YYYYMMDD hhmm</label>
+				<input type="text" name="birthday_time" placeholder="e.g, 2025-04-26 01:16 -> 20250426 0116" required class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300">
+			</div>
+
+			<button type="submit" class="w-full bg-blue-500 text-white rounded-lg p-2 hover:bg-blue-600 transition">產生 PDF</button>
+		</form>
+
+		<!-- 👇這是新增的錯誤訊息區 👇 -->
+		<p id="errorMsg" class="text-red-500 text-center mt-4 hidden"></p>
+	</div>
+
+	<!-- PDF 預覽區 -->
+	<div id="preview" class="flex-1 hidden flex flex-col p-6">
+		<iframe id="pdfViewer" class="w-full h-full flex-1 rounded-lg border-2 border-gray-300"></iframe>
+		<div class="mt-4 flex justify-center">
+			<button id="downloadBtn" class="bg-green-500 text-white rounded-lg px-6 py-2 hover:bg-green-600 transition">下載 PDF</button>
+		</div>
+	</div>
+
+	<script>
+		document.getElementById('pdfForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+
+			const form = e.target;
+			const formData = new FormData(form);
+
+            const birthdayTime = formData.get('birthday_time')?.replace(/\s+/g, '') || 'generated';
+
+
+			const preview = document.getElementById('preview');
+			const pdfViewer = document.getElementById('pdfViewer');
+			const downloadBtn = document.getElementById('downloadBtn');
+
+			// 提交前先清空前一次的 PDF
+			preview.classList.add('hidden');
+			pdfViewer.src = '';
+
+			const errorMsg = document.getElementById('errorMsg');
+				errorMsg.classList.add('hidden');
+			errorMsg.textContent = '';
+
+			try {
+				const response = await fetch('http://localhost:5566/generate-pdf', {
+					method: 'POST',
+					body: formData
+				});
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+
+                    // 顯示 PDF 預覽
+                    const preview = document.getElementById('preview');
+                    const pdfViewer = document.getElementById('pdfViewer');
+                    preview.classList.remove('hidden');
+                    pdfViewer.src = url + '#view=FitH&navpanes=0&toolbar=0';
+
+                    // 下載按鈕設定
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    downloadBtn.onclick = () => {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${birthdayTime}.pdf`
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                    };
+
+                } else if (response.status === 400) {
+                    errorMsg.textContent = '出生時間錯誤，請檢查輸入資料！';
+                    errorMsg.classList.remove('hidden');
+                } else if (response.status === 500) {
+                    errorMsg.textContent = '系統錯誤，請稍後再試。';
+                    errorMsg.classList.remove('hidden');
+                } else {
+                    errorMsg.textContent = '發生未知錯誤。';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.textContent = '無法連線到伺服器，請檢查網路或稍後再試。';
+                errorMsg.classList.remove('hidden');
+            }
+        });
+	</script>
+</body>
+</html>
