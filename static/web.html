@@ -94,6 +94,10 @@
 
 					preview.classList.remove('hidden');
 					pdfViewer.src = url + '#view=FitH&navpanes=0&toolbar=0';
+					// 🔥 加這段：自動滾到預覽區
+					setTimeout(() => {
+						preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					}, 300);
 
 					const isLeapBaby = response.headers.get('X-IsLeap') === 'true';
 					if (isLeapBaby) {
