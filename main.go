@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -13,7 +14,7 @@ func main() {
 
 	http.HandleFunc("/generate-pdf", handleGeneratePdf)
 	http.HandleFunc("/generate-num", handleGenerateNum)
-	http.ListenAndServe(":5566", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func handleGeneratePdf(w http.ResponseWriter, r *http.Request) {
@@ -26,14 +27,13 @@ func handleGeneratePdf(w http.ResponseWriter, r *http.Request) {
 	nickName := r.FormValue("nickname")
 	birthday := r.FormValue("birthday_time")
 
-	pdfData, errCode := generate(name, nickName, birthday)
+	pdfData, isLeap, errCode := generatePdf(name, nickName, birthday)
 	if errCode != http.StatusOK {
 		http.Error(w, "Failed to generate PDF", errCode)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"report.pdf\"")
+	w.Header().Set("X-IsLeap", fmt.Sprint(isLeap))
 	w.Write(pdfData)
 }
 

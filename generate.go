@@ -47,6 +47,32 @@ var (
 	charMap = revert(chars)
 )
 
+func generatePdf(name string, nickName string, birthday string) ([]byte, bool, int) {
+	// birthday = "2024/09/29 10:18"
+	solarT, err := time.Parse(layout, birthday)
+	if err != nil {
+		slog.Warn("Error parsing time:", "birthday", birthday, "err", err)
+		return nil, false, http.StatusBadRequest
+	}
+	lunarT, leapSolar := getLunarTime(solarT)
+	pdf := NewPdf()
+
+	generate(pdf, name, nickName, solarT, lunarT)
+	isLeap := leapSolar != nil
+	if isLeap {
+		leapLunar := time.Date(lunarT.Year(), lunarT.Month()+1, lunarT.Day(), lunarT.Hour(), lunarT.Minute(), 0, 0, time.UTC)
+		generate(pdf, name, nickName, *leapSolar, leapLunar)
+	}
+
+	var buf bytes.Buffer
+	_, err = pdf.WriteTo(&buf)
+	if err != nil {
+		slog.Warn("Error writing PDF to buffer:", "err", err)
+		return nil, false, http.StatusInternalServerError
+	}
+	return buf.Bytes(), isLeap, http.StatusOK
+}
+
 type TimeData struct {
 	SumData
 	Time      time.Time
@@ -59,19 +85,10 @@ type SumData struct {
 	Day   int
 }
 
-func generate(name string, nickName string, birthday string) ([]byte, int) {
-	// birthday = "2024/09/29 10:18"
-	solarT, err := time.Parse(layout, birthday)
-	if err != nil {
-		slog.Warn("Error parsing time:", "birthday", birthday, "err", err)
-		return nil, http.StatusBadRequest
-	}
+func generate(pdf *gopdf.GoPdf, name string, nickName string, solarT time.Time, lunarT time.Time) {
+	pdf.AddPage()
 	solar := newTimeData(solarT)
-
-	lunarT := getLunarTime(solarT)
 	lunar := newTimeData(lunarT)
-
-	pdf := NewPdf()
 
 	drawDegreeTables(pdf, solar, lunar)
 
@@ -99,14 +116,6 @@ func generate(name string, nickName string, birthday string) ([]byte, int) {
 		[]int{solar.Year, solar.Month},
 		[]int{lunar.Year, lunar.Month},
 	)
-
-	var buf bytes.Buffer
-	_, err = pdf.WriteTo(&buf)
-	if err != nil {
-		slog.Warn("Error writing PDF to buffer:", "err", err)
-		return nil, http.StatusInternalServerError
-	}
-	return buf.Bytes(), http.StatusOK
 	// err = pdf.WritePdf("table.pdf")
 	// if err != nil {
 	// 	slog.Warn("Error writing PDF:", "err", err)
@@ -140,8 +149,6 @@ func generateNum(number string) ([]byte, int) {
 func NewPdf() *gopdf.GoPdf {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
-	pdf.AddPage()
-
 	err := pdf.AddTTFFont(font, "/Library/Fonts/Arial Unicode.ttf")
 	if err != nil {
 		slog.Warn("Error adding font:", "err", err)
@@ -444,10 +451,16 @@ func sumDigitsByStr(numberStr string) (int, []int) {
 	return sum, digits
 }
 
-func getLunarTime(solar time.Time) time.Time {
+func getLunarTime(solar time.Time) (time.Time, *time.Time) {
 	c := calendar.BySolar(int64(solar.Year()), int64(solar.Month()), int64(solar.Day()), int64(solar.Hour()), int64(solar.Minute()), 0)
 	lunar := c.Lunar
-	return time.Date(int(lunar.GetYear()), time.Month(lunar.GetMonth()), int(lunar.GetDay()), int(solar.Hour()), solar.Minute(), 0, 0, time.UTC)
+	lunarTime := time.Date(int(lunar.GetYear()), time.Month(lunar.GetMonth()), int(lunar.GetDay()), int(solar.Hour()), solar.Minute(), 0, 0, time.UTC)
+	if !lunar.IsLeapMonth() {
+		return lunarTime, nil
+	}
+	newC := calendar.ByLunar(lunar.GetYear(), lunar.GetMonth()+1, lunar.GetDay(), int64(solar.Hour()), int64(solar.Minute()), 0, false)
+	newSolar := time.Date(int(newC.Solar.GetYear()), time.Month(newC.Solar.GetMonth()), int(newC.Solar.GetDay()), int(solar.Hour()), solar.Minute(), 0, 0, time.UTC)
+	return lunarTime, &newSolar
 }
 
 func newTimeData(v time.Time) *TimeData {
