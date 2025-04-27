@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	layout     = "20060102 1504"
+	layout     = "200601021504"
+	layoutDate = "20060102"
 	font       = "fontDefault"
 	center     = "center"
 	cellH      = 13.0
@@ -49,19 +50,23 @@ var (
 
 func generatePdf(name string, nickName string, birthday string) ([]byte, bool, int) {
 	// birthday = "2024/09/29 10:18"
+	onlyDate := false
 	solarT, err := time.Parse(layout, birthday)
 	if err != nil {
-		slog.Warn("Error parsing time:", "birthday", birthday, "err", err)
-		return nil, false, http.StatusBadRequest
+		if solarT, err = time.Parse(layoutDate, birthday); err != nil {
+			slog.Warn("Error parsing time:", "birthday", birthday, "err", err)
+			return nil, false, http.StatusBadRequest
+		}
+		onlyDate = true
 	}
 	lunarT, leapSolar := getLunarTime(solarT)
 	pdf := NewPdf()
 
-	generate(pdf, name, nickName, solarT, lunarT)
+	generate(pdf, name, nickName, onlyDate, solarT, lunarT)
 	isLeap := leapSolar != nil
 	if isLeap {
 		leapLunar := time.Date(lunarT.Year(), lunarT.Month()+1, lunarT.Day(), lunarT.Hour(), lunarT.Minute(), 0, 0, time.UTC)
-		generate(pdf, name, nickName, *leapSolar, leapLunar)
+		generate(pdf, name, nickName, onlyDate, *leapSolar, leapLunar)
 	}
 
 	var buf bytes.Buffer
@@ -75,9 +80,10 @@ func generatePdf(name string, nickName string, birthday string) ([]byte, bool, i
 
 type TimeData struct {
 	SumData
-	Time      time.Time
-	DigitMap  map[string]int
-	MoreThan2 bool
+	Time         time.Time
+	DigitMap     map[string]int
+	MoreThan2Num bool
+	OnlyDate     bool
 }
 type SumData struct {
 	Year  int
@@ -85,10 +91,10 @@ type SumData struct {
 	Day   int
 }
 
-func generate(pdf *gopdf.GoPdf, name string, nickName string, solarT time.Time, lunarT time.Time) {
+func generate(pdf *gopdf.GoPdf, name string, nickName string, onlyDate bool, solarT time.Time, lunarT time.Time) {
 	pdf.AddPage()
-	solar := newTimeData(solarT)
-	lunar := newTimeData(lunarT)
+	solar := newTimeData(solarT, onlyDate)
+	lunar := newTimeData(lunarT, onlyDate)
 
 	drawDegreeTables(pdf, solar, lunar)
 
@@ -191,12 +197,18 @@ func drawDegreeTables(pdf *gopdf.GoPdf, solar *TimeData, lunar *TimeData) {
 	startY += cellH
 	solarStages := stageNumbers("+", solars)
 	lunarStages := stageNumbers("-", lunars)
-	drawMainRow(pdf, startMainX, startY, 8.5, solarColar, solarStages)
-	drawMainRow(pdf, 232.0, startY, 8.5, lunarColar, lunarStages)
+	print := func(input []string) []string {
+		if solar.OnlyDate {
+			return append(input[:3], "-", "-")
+		}
+		return input
+	}
+	drawMainRow(pdf, startMainX, startY, 8.5, solarColar, print(solarStages))
+	drawMainRow(pdf, 232.0, startY, 8.5, lunarColar, print(lunarStages))
 
 	startY += cellH
-	drawMainRow(pdf, startMainX, startY, 8.5, solarColar, soulDegrees(solar, solarStages))
-	drawMainRow(pdf, 232.0, startY, 8.5, lunarColar, soulDegrees(lunar, lunarStages))
+	drawMainRow(pdf, startMainX, startY, 8.5, solarColar, print(soulDegrees(solar, solarStages)))
+	drawMainRow(pdf, 232.0, startY, 8.5, lunarColar, print(soulDegrees(lunar, lunarStages)))
 }
 
 func drawDegreeHeader(pdf *gopdf.GoPdf, startY float64, solar time.Time, lunar time.Time) error {
@@ -482,7 +494,7 @@ func getLunarTime(solar time.Time) (time.Time, *time.Time) {
 	return lunarTime, &newSolar
 }
 
-func newTimeData(v time.Time) *TimeData {
+func newTimeData(v time.Time, onlyDate bool) *TimeData {
 	sumYr, digitYr := sumDigits(v.Year())
 	sumMon, digitMon := sumDigits(int(v.Month()))
 	sumDay, digitDay := sumDigits(v.Day())
@@ -507,9 +519,10 @@ func newTimeData(v time.Time) *TimeData {
 			Month: sumMon,
 			Day:   sumDay,
 		},
-		Time:      v,
-		DigitMap:  digits,
-		MoreThan2: moreThan2,
+		Time:         v,
+		DigitMap:     digits,
+		MoreThan2Num: moreThan2,
+		OnlyDate:     onlyDate,
 	}
 }
 
@@ -539,7 +552,7 @@ func soulDegrees(d *TimeData, values []string) []string {
 	res := []string{}
 	for _, v := range values {
 		degree := soulDegree(v, d.DigitMap)
-		if degree == 7 && d.MoreThan2 {
+		if degree == 7 && d.MoreThan2Num {
 			degree = 6
 		}
 		res = append(res, fmt.Sprint(degree))
