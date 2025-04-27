@@ -146,6 +146,25 @@ func generateNum(number string) ([]byte, int) {
 	return buf, http.StatusOK
 }
 
+func generateName(name string) ([]byte, int) {
+	result := charsToDigits(name)
+	if result == "0" {
+		slog.Warn("Invalid name:", "name", name)
+		return nil, http.StatusBadRequest
+	}
+	type Result struct {
+		LifeName string `json:"lifeName"`
+	}
+	buf, err := json.Marshal(&Result{
+		LifeName: result,
+	})
+	if err != nil {
+		slog.Warn("Error marshalling result:", "err", err)
+		return nil, http.StatusInternalServerError
+	}
+	return buf, http.StatusOK
+}
+
 func NewPdf() *gopdf.GoPdf {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
